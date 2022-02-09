@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from "express";
-import destinationModel from "../models/destination";
 import { newReqHandler } from "../functions/elevator";
 
 let elevator = [4];
@@ -11,6 +10,10 @@ destinationRouter.get(
     res.status(200).send(elevator);
   }
 );
+destinationRouter.get("/api/reset", (req: Request, res: Response) => {
+  elevator = [4];
+  res.status(200).send(elevator);
+});
 
 destinationRouter.post("/api/new-req", (req: Request, res: Response) => {
   let newElevator = newReqHandler(req.body, elevator);

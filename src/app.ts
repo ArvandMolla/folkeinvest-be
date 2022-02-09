@@ -11,9 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use(destinationRouter);
-// app.get("/test", (req, res) => {
-//   res.status(200).send("hello");
-// });
+
 const server = createServer(app);
 
 export default server;

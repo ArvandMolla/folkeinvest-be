@@ -1,44 +1,69 @@
 import supertest from "supertest";
 import server from "../app";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const request = supertest(server);
 
-describe("Endpoints Testing suite", () => {
-  beforeAll((done) => {
-    mongoose.connect(process.env.MONGO_TEST_CONNECTION!).then(() => {
-      console.log("Connected to Atlas");
-      done();
-    });
-  });
-
-  it("should test that getting all events from api/event is working correctly", async () => {
-    const response = await request.get("/api/event");
+describe("Elevator Testing suite", () => {
+  it("should test that getting destination from api/all-destinations works correctly", async () => {
+    const response = await request.get("/api/all-destinations");
     expect(response.status).toBe(200);
     expect(response.body).toBeDefined();
+    expect(response.body.length).toEqual(1);
+    expect(response.body[0]).toEqual(4);
   });
 
-  it("should test that when we add a new event, we can retrieve it right away", async () => {
-    const validEvent = {
-      sam: 888,
-      payload: "test event 888",
+  it("should test that when we add a new request, we can retrieve it right away", async () => {
+    const validReq = {
+      destination: 12345,
+      direction: 0,
     };
 
-    const response = await request.post("/api/event").send(validEvent);
+    const response = await request.post("/api/new-req").send(validReq);
     expect(response.status).toBe(201);
-    expect(response.body._id).toBeDefined();
-
-    const response2 = await request.get("/api/event/" + response.body._id);
-    expect(response2.status).toBe(200);
-    expect(response2.body.sam).toEqual(validEvent.sam);
+    expect(response.body).toBeDefined();
+    expect(response.body.length).toEqual(2);
+    expect(response.body[1]).toEqual(12345);
   });
 
-  afterAll((done) => {
-    mongoose.connection.dropDatabase().then(() => {
-      mongoose.connection.close().then(done);
-    });
+  it("should test that when we send a seies of requests they are stored in a right way as destinations", async () => {
+    await request.get("/api/reset");
+    const reqArr = [
+      {
+        destination: 7,
+        direction: -1,
+      },
+      {
+        destination: 2,
+        direction: 1,
+      },
+      {
+        destination: 3,
+        direction: 1,
+      },
+      {
+        destination: 1,
+        direction: -1,
+      },
+      {
+        destination: 6,
+        direction: 1,
+      },
+      {
+        destination: 5,
+        direction: -1,
+      },
+    ];
+
+    await Promise.all(
+      reqArr.map(async (elem) => {
+        await request.post("/api/new-req").send(elem);
+      })
+    );
+
+    const response = await request.get("/api/all-destinations");
+
+    expect(JSON.stringify(response.body)).toBe(
+      JSON.stringify([4, 6, 7, 5, 2, 3, 1])
+    );
   });
 });
