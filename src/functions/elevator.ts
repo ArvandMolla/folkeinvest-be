@@ -1,6 +1,12 @@
 interface reqInterface {
   destination: number;
-  direction: number;
+  direction: directionEnum;
+}
+
+enum directionEnum {
+  "no direction" = 0,
+  "up" = 1,
+  "down" = -1,
 }
 
 export const newReqHandler = (req: reqInterface, elevator: number[]) => {
